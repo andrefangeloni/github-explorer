@@ -3,55 +3,67 @@ import { FiChevronRight } from 'react-icons/fi';
 
 import logoImg from '../../assets/logo.svg';
 
+import api from '../../services/api';
+
 import { Title, Form, Repositories } from './styles';
 
-const Dashboard: React.FC = () => (
-  <>
-    <img src={logoImg} alt="GitHub Explorer" />
-    <Title>Explore repositórios no GitHub</Title>
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
 
-    <Form>
-      <input placeholder="Digite o nome do repositório" />
-      <button type="submit">
-        Pesquisar
-      </button>
-    </Form>
+const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = React.useState('');
+  const [repositories, setRepositories] = React.useState<Repository[]>([]);
 
-    <Repositories>
-      <a href="https://github.com/">
-        <img src="https://github.com/andrefangeloni.png" alt="Avatar" />
+  const handleAddRepository = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
 
-        <div>
-          <strong>rocketseat/unform</strong>
-          <p>Easy peasy high scalable forms</p>
-        </div>
+    const { data } = await api.get<Repository>(`/repos/${newRepo}`);
 
-        <FiChevronRight size={20} />
-      </a>
+    setRepositories([...repositories, data]);
+    setNewRepo('');
+  };
 
-      <a href="https://github.com/">
-        <img src="https://github.com/andrefangeloni.png" alt="Avatar" />
+  return (
+    <>
+      <img src={logoImg} alt="GitHub Explorer" />
+      <Title>Explore repositórios no GitHub</Title>
 
-        <div>
-          <strong>rocketseat/unform</strong>
-          <p>Easy peasy high scalable forms</p>
-        </div>
+      <Form onSubmit={handleAddRepository}>
+        <input
+          value={newRepo}
+          onChange={(e) => setNewRepo(e.target.value)}
+          placeholder="Digite o nome do repositório"
+        />
+        <button type="submit">Pesquisar</button>
+      </Form>
 
-        <FiChevronRight size={20} />
-      </a>
+      <Repositories>
+        {repositories.map((repository) => (
+          <a key={repository.full_name} href="https://github.com/">
+            <img
+              src={repository.owner.avatar_url}
+              alt={repository.owner.login}
+            />
 
-      <a href="https://github.com/">
-        <img src="https://github.com/andrefangeloni.png" alt="Avatar" />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
 
-        <div>
-          <strong>rocketseat/unform</strong>
-          <p>Easy peasy high scalable forms</p>
-        </div>
-
-        <FiChevronRight size={20} />
-      </a>
-    </Repositories>
-  </>
-);
+            <FiChevronRight size={20} />
+          </a>
+        ))}
+      </Repositories>
+    </>
+  );
+};
 
 export default Dashboard;
